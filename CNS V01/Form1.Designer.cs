@@ -32,6 +32,14 @@
             this.tabPage4 = new System.Windows.Forms.TabPage();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.códigoBarrasDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.nombreDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.descripciónDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.precioCompraDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.pVPDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.stockMáximoDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.stockMínimoDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.productosBindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.dataBase01DataSet = new CNS_V01.DataBase01DataSet();
             this.btnGuardar = new System.Windows.Forms.Button();
@@ -51,19 +59,11 @@
             this.label2 = new System.Windows.Forms.Label();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.productosTableAdapter = new CNS_V01.DataBase01DataSetTableAdapters.ProductosTableAdapter();
-            this.stockMínimoDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.stockMáximoDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.pVPDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.precioCompraDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.descripciónDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.nombreDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.códigoBarrasDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.tabPage1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.productosBindingSource)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataBase01DataSet)).BeginInit();
             this.tabControl1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
             // 
             // tabPage4
@@ -111,6 +111,82 @@
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Registro Productos";
             this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // dataGridView1
+            // 
+            this.dataGridView1.AutoGenerateColumns = false;
+            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.códigoBarrasDataGridViewTextBoxColumn,
+            this.nombreDataGridViewTextBoxColumn,
+            this.descripciónDataGridViewTextBoxColumn,
+            this.precioCompraDataGridViewTextBoxColumn,
+            this.pVPDataGridViewTextBoxColumn,
+            this.stockMáximoDataGridViewTextBoxColumn,
+            this.stockMínimoDataGridViewTextBoxColumn});
+            this.dataGridView1.DataSource = this.productosBindingSource;
+            this.dataGridView1.Location = new System.Drawing.Point(19, 311);
+            this.dataGridView1.Name = "dataGridView1";
+            this.dataGridView1.RowHeadersWidth = 62;
+            this.dataGridView1.RowTemplate.Height = 28;
+            this.dataGridView1.Size = new System.Drawing.Size(933, 122);
+            this.dataGridView1.TabIndex = 18;
+            // 
+            // códigoBarrasDataGridViewTextBoxColumn
+            // 
+            this.códigoBarrasDataGridViewTextBoxColumn.DataPropertyName = "Código Barras";
+            this.códigoBarrasDataGridViewTextBoxColumn.HeaderText = "Código Barras";
+            this.códigoBarrasDataGridViewTextBoxColumn.MinimumWidth = 8;
+            this.códigoBarrasDataGridViewTextBoxColumn.Name = "códigoBarrasDataGridViewTextBoxColumn";
+            this.códigoBarrasDataGridViewTextBoxColumn.Width = 150;
+            // 
+            // nombreDataGridViewTextBoxColumn
+            // 
+            this.nombreDataGridViewTextBoxColumn.DataPropertyName = "Nombre";
+            this.nombreDataGridViewTextBoxColumn.HeaderText = "Nombre";
+            this.nombreDataGridViewTextBoxColumn.MinimumWidth = 8;
+            this.nombreDataGridViewTextBoxColumn.Name = "nombreDataGridViewTextBoxColumn";
+            this.nombreDataGridViewTextBoxColumn.Width = 150;
+            // 
+            // descripciónDataGridViewTextBoxColumn
+            // 
+            this.descripciónDataGridViewTextBoxColumn.DataPropertyName = "Descripción";
+            this.descripciónDataGridViewTextBoxColumn.HeaderText = "Descripción";
+            this.descripciónDataGridViewTextBoxColumn.MinimumWidth = 8;
+            this.descripciónDataGridViewTextBoxColumn.Name = "descripciónDataGridViewTextBoxColumn";
+            this.descripciónDataGridViewTextBoxColumn.Width = 150;
+            // 
+            // precioCompraDataGridViewTextBoxColumn
+            // 
+            this.precioCompraDataGridViewTextBoxColumn.DataPropertyName = "Precio Compra";
+            this.precioCompraDataGridViewTextBoxColumn.HeaderText = "Precio Compra";
+            this.precioCompraDataGridViewTextBoxColumn.MinimumWidth = 8;
+            this.precioCompraDataGridViewTextBoxColumn.Name = "precioCompraDataGridViewTextBoxColumn";
+            this.precioCompraDataGridViewTextBoxColumn.Width = 150;
+            // 
+            // pVPDataGridViewTextBoxColumn
+            // 
+            this.pVPDataGridViewTextBoxColumn.DataPropertyName = "PVP";
+            this.pVPDataGridViewTextBoxColumn.HeaderText = "PVP";
+            this.pVPDataGridViewTextBoxColumn.MinimumWidth = 8;
+            this.pVPDataGridViewTextBoxColumn.Name = "pVPDataGridViewTextBoxColumn";
+            this.pVPDataGridViewTextBoxColumn.Width = 150;
+            // 
+            // stockMáximoDataGridViewTextBoxColumn
+            // 
+            this.stockMáximoDataGridViewTextBoxColumn.DataPropertyName = "Stock Máximo";
+            this.stockMáximoDataGridViewTextBoxColumn.HeaderText = "Stock Máximo";
+            this.stockMáximoDataGridViewTextBoxColumn.MinimumWidth = 8;
+            this.stockMáximoDataGridViewTextBoxColumn.Name = "stockMáximoDataGridViewTextBoxColumn";
+            this.stockMáximoDataGridViewTextBoxColumn.Width = 150;
+            // 
+            // stockMínimoDataGridViewTextBoxColumn
+            // 
+            this.stockMínimoDataGridViewTextBoxColumn.DataPropertyName = "Stock Mínimo";
+            this.stockMínimoDataGridViewTextBoxColumn.HeaderText = "Stock Mínimo";
+            this.stockMínimoDataGridViewTextBoxColumn.MinimumWidth = 8;
+            this.stockMínimoDataGridViewTextBoxColumn.Name = "stockMínimoDataGridViewTextBoxColumn";
+            this.stockMínimoDataGridViewTextBoxColumn.Width = 150;
             // 
             // productosBindingSource
             // 
@@ -166,6 +242,7 @@
             this.txtCodigoBarras.Name = "txtCodigoBarras";
             this.txtCodigoBarras.Size = new System.Drawing.Size(100, 26);
             this.txtCodigoBarras.TabIndex = 11;
+            this.txtCodigoBarras.Leave += new System.EventHandler(this.txtCodigoBarras_Leave);
             // 
             // txtDescripcion
             // 
@@ -231,9 +308,9 @@
             this.label3.AutoSize = true;
             this.label3.Location = new System.Drawing.Point(666, 21);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(106, 20);
+            this.label3.Size = new System.Drawing.Size(96, 20);
             this.label3.TabIndex = 2;
-            this.label3.Text = "Descripción: *";
+            this.label3.Text = "Descripción:";
             // 
             // label2
             // 
@@ -259,82 +336,6 @@
             // 
             this.productosTableAdapter.ClearBeforeFill = true;
             // 
-            // stockMínimoDataGridViewTextBoxColumn
-            // 
-            this.stockMínimoDataGridViewTextBoxColumn.DataPropertyName = "Stock Mínimo";
-            this.stockMínimoDataGridViewTextBoxColumn.HeaderText = "Stock Mínimo";
-            this.stockMínimoDataGridViewTextBoxColumn.MinimumWidth = 8;
-            this.stockMínimoDataGridViewTextBoxColumn.Name = "stockMínimoDataGridViewTextBoxColumn";
-            this.stockMínimoDataGridViewTextBoxColumn.Width = 150;
-            // 
-            // stockMáximoDataGridViewTextBoxColumn
-            // 
-            this.stockMáximoDataGridViewTextBoxColumn.DataPropertyName = "Stock Máximo";
-            this.stockMáximoDataGridViewTextBoxColumn.HeaderText = "Stock Máximo";
-            this.stockMáximoDataGridViewTextBoxColumn.MinimumWidth = 8;
-            this.stockMáximoDataGridViewTextBoxColumn.Name = "stockMáximoDataGridViewTextBoxColumn";
-            this.stockMáximoDataGridViewTextBoxColumn.Width = 150;
-            // 
-            // pVPDataGridViewTextBoxColumn
-            // 
-            this.pVPDataGridViewTextBoxColumn.DataPropertyName = "PVP";
-            this.pVPDataGridViewTextBoxColumn.HeaderText = "PVP";
-            this.pVPDataGridViewTextBoxColumn.MinimumWidth = 8;
-            this.pVPDataGridViewTextBoxColumn.Name = "pVPDataGridViewTextBoxColumn";
-            this.pVPDataGridViewTextBoxColumn.Width = 150;
-            // 
-            // precioCompraDataGridViewTextBoxColumn
-            // 
-            this.precioCompraDataGridViewTextBoxColumn.DataPropertyName = "Precio Compra";
-            this.precioCompraDataGridViewTextBoxColumn.HeaderText = "Precio Compra";
-            this.precioCompraDataGridViewTextBoxColumn.MinimumWidth = 8;
-            this.precioCompraDataGridViewTextBoxColumn.Name = "precioCompraDataGridViewTextBoxColumn";
-            this.precioCompraDataGridViewTextBoxColumn.Width = 150;
-            // 
-            // descripciónDataGridViewTextBoxColumn
-            // 
-            this.descripciónDataGridViewTextBoxColumn.DataPropertyName = "Descripción";
-            this.descripciónDataGridViewTextBoxColumn.HeaderText = "Descripción";
-            this.descripciónDataGridViewTextBoxColumn.MinimumWidth = 8;
-            this.descripciónDataGridViewTextBoxColumn.Name = "descripciónDataGridViewTextBoxColumn";
-            this.descripciónDataGridViewTextBoxColumn.Width = 150;
-            // 
-            // nombreDataGridViewTextBoxColumn
-            // 
-            this.nombreDataGridViewTextBoxColumn.DataPropertyName = "Nombre";
-            this.nombreDataGridViewTextBoxColumn.HeaderText = "Nombre";
-            this.nombreDataGridViewTextBoxColumn.MinimumWidth = 8;
-            this.nombreDataGridViewTextBoxColumn.Name = "nombreDataGridViewTextBoxColumn";
-            this.nombreDataGridViewTextBoxColumn.Width = 150;
-            // 
-            // códigoBarrasDataGridViewTextBoxColumn
-            // 
-            this.códigoBarrasDataGridViewTextBoxColumn.DataPropertyName = "Código Barras";
-            this.códigoBarrasDataGridViewTextBoxColumn.HeaderText = "Código Barras";
-            this.códigoBarrasDataGridViewTextBoxColumn.MinimumWidth = 8;
-            this.códigoBarrasDataGridViewTextBoxColumn.Name = "códigoBarrasDataGridViewTextBoxColumn";
-            this.códigoBarrasDataGridViewTextBoxColumn.Width = 150;
-            // 
-            // dataGridView1
-            // 
-            this.dataGridView1.AutoGenerateColumns = false;
-            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.códigoBarrasDataGridViewTextBoxColumn,
-            this.nombreDataGridViewTextBoxColumn,
-            this.descripciónDataGridViewTextBoxColumn,
-            this.precioCompraDataGridViewTextBoxColumn,
-            this.pVPDataGridViewTextBoxColumn,
-            this.stockMáximoDataGridViewTextBoxColumn,
-            this.stockMínimoDataGridViewTextBoxColumn});
-            this.dataGridView1.DataSource = this.productosBindingSource;
-            this.dataGridView1.Location = new System.Drawing.Point(19, 311);
-            this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.RowHeadersWidth = 62;
-            this.dataGridView1.RowTemplate.Height = 28;
-            this.dataGridView1.Size = new System.Drawing.Size(933, 122);
-            this.dataGridView1.TabIndex = 18;
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
@@ -347,10 +348,10 @@
             this.Load += new System.EventHandler(this.Form1_Load);
             this.tabPage1.ResumeLayout(false);
             this.tabPage1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.productosBindingSource)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataBase01DataSet)).EndInit();
             this.tabControl1.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.ResumeLayout(false);
 
         }
