@@ -47,18 +47,26 @@ namespace CNS_V01
             }
 
             // Validar que los campos numéricos tengan el formato correcto
-            decimal precioCompra, pvp;
+            double precioCompra, pvp;
             int stockMaximo, stockMinimo;
 
-            if (!decimal.TryParse(txtPrecioCompra.Text, out precioCompra) ||
-                !decimal.TryParse(txtPVP.Text, out pvp) ||
+            if (!double.TryParse(txtPrecioCompra.Text, out precioCompra) ||
+                !double.TryParse(txtPVP.Text, out pvp) ||
                 !int.TryParse(txtStockMaximo.Text, out stockMaximo) ||
                 !int.TryParse(txtStockMinimo.Text, out stockMinimo))
             {
                 MessageBox.Show("Los campos numéricos deben tener un formato válido.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return; // Salir del método si hay formato incorrecto en campos numéricos
             }
+            precioCompra = double.Parse(txtPrecioCompra.Text);
+            pvp=double.Parse(txtPVP.Text);
+            stockMinimo = int.Parse(txtStockMinimo.Text);
             stockMaximo = int.Parse(txtStockMaximo.Text);
+            if (precioCompra <= 0 || pvp <= 0 || stockMaximo <= 0 || stockMinimo <= 0)
+            {
+                MessageBox.Show("Los precios y stocks no pueden ser negativos o 0.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return; // Salir del método si hay valores negativos
+            }
             try
             {
                 // Abrir la conexión
@@ -195,16 +203,6 @@ namespace CNS_V01
                             txtPVP.Text = reader["PVP"].ToString();
                             txtStockMaximo.Text = reader["Stock Máximo"].ToString();
                             txtStockMinimo.Text = reader["Stock Mínimo"].ToString();
-
-                            // Bloquear los TextBox que no deben ser editados
-                            txtNombreProducto.Enabled = false;
-                            txtDescripcion.Enabled = false;
-                            txtPrecioCompra.Enabled = false;
-                            txtPVP.Enabled = false;
-                            txtStockMinimo.Enabled = false;
-
-                            // Habilitar solo el TextBox de Stock Máximo
-                            txtStockMaximo.Enabled = true;
                         }
                     }
                 }
@@ -217,6 +215,15 @@ namespace CNS_V01
             {
                 // Cerrar la conexión
                 conexion.Close();
+                // Bloquear los TextBox que no deben ser editados
+                txtNombreProducto.Enabled = false;
+                txtDescripcion.Enabled = false;
+                txtPrecioCompra.Enabled = false;
+                txtPVP.Enabled = false;
+                txtStockMinimo.Enabled = false;
+
+                // Habilitar solo el TextBox de Stock Máximo
+                txtStockMaximo.Enabled = true;
             }
         }
         private bool ProductoExiste(string codigoBarras)
