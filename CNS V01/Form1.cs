@@ -22,7 +22,7 @@ namespace CNS_V01
             InitializeComponent();
 
             // Configurar la cadena de conexión de Access
-            string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\\Users\\SAID\\Documents\\CNS V01\\DataBase01.accdb;Persist Security Info=False;";
+            string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\\bdd\\DataBase01.accdb;Persist Security Info=False;";
             conexion = new OleDbConnection(connectionString);
 
             // Configurar el adaptador y el DataTable
@@ -177,6 +177,7 @@ namespace CNS_V01
             // Cuando el TextBox de Código de Barras pierde el foco (cuando el usuario termina de ingresar el código)
             if (ProductoExiste(txtCodigoBarras.Text))
             {
+                MessageBox.Show("¿Desea aumentar el stock?");
                 // Bloquear los TextBox que no deben ser editados
                 txtNombreProducto.Enabled = false;
                 txtDescripcion.Enabled = false;
