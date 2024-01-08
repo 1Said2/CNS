@@ -69,17 +69,18 @@ namespace CNS_V01
             }
             try
             {
-                // Abrir la conexión
-                conexion.Open();
 
                 if (ProductoExiste(txtCodigoBarras.Text))
                 {
-                    // Si existe, aumentar el stock
+                    // Abrir la conexión
+                    conexion.Open();
                     AumentarStock(txtCodigoBarras.Text, stockMaximo);
                     HabilitarTodosLosCampos();
                 }
                 else
                 {
+                    // Abrir la conexión
+                    conexion.Open();
                     // Crear un nuevo comando de inserción
                     OleDbCommand insertCommand = new OleDbCommand("INSERT INTO Productos ([Código Barras], Nombre, Descripción, [Precio Compra], PVP, [Stock Máximo], [Stock Mínimo]) " +
                                                                   "VALUES (?, ?, ?, ?, ?, ?, ?)", conexion);
@@ -126,14 +127,12 @@ namespace CNS_V01
         }
         private void LimpiarTextBox()
         {
-            // Limpiar todos los TextBox
-            foreach (Control control in Controls)
-            {
-                if (control is TextBox)
-                {
-                    ((TextBox)control).Clear();
-                }
-            }
+            txtNombreProducto.Clear();
+            txtDescripcion.Clear();
+            txtPrecioCompra.Clear();
+            txtPVP.Clear();
+            txtStockMinimo.Clear();
+            txtStockMaximo.Clear();
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -176,7 +175,33 @@ namespace CNS_V01
         private void txtCodigoBarras_Leave(object sender, EventArgs e)
         {
             // Cuando el TextBox de Código de Barras pierde el foco (cuando el usuario termina de ingresar el código)
-            BuscarProductoPorCodigoBarras(txtCodigoBarras.Text);
+            if (ProductoExiste(txtCodigoBarras.Text))
+            {
+                // Bloquear los TextBox que no deben ser editados
+                txtNombreProducto.Enabled = false;
+                txtDescripcion.Enabled = false;
+                txtPrecioCompra.Enabled = false;
+                txtPVP.Enabled = false;
+                txtStockMinimo.Enabled = false;
+
+                // Habilitar solo el TextBox de Stock Máximo
+                txtStockMaximo.Enabled = true;
+                // Si existe, aumentar el stock
+                BuscarProductoPorCodigoBarras(txtCodigoBarras.Text);
+            }
+            else
+            {
+                // Bloquear los TextBox que no deben ser editados
+                txtNombreProducto.Enabled = true;
+                txtDescripcion.Enabled = true;
+                txtPrecioCompra.Enabled = true;
+                txtPVP.Enabled = true;
+                txtStockMinimo.Enabled = true;
+
+                // Habilitar solo el TextBox de Stock Máximo
+                txtStockMaximo.Enabled = true;
+                LimpiarTextBox();
+            }
         }
         private void BuscarProductoPorCodigoBarras(string codigoBarras)
         {
@@ -215,15 +240,6 @@ namespace CNS_V01
             {
                 // Cerrar la conexión
                 conexion.Close();
-                // Bloquear los TextBox que no deben ser editados
-                txtNombreProducto.Enabled = false;
-                txtDescripcion.Enabled = false;
-                txtPrecioCompra.Enabled = false;
-                txtPVP.Enabled = false;
-                txtStockMinimo.Enabled = false;
-
-                // Habilitar solo el TextBox de Stock Máximo
-                txtStockMaximo.Enabled = true;
             }
         }
         private bool ProductoExiste(string codigoBarras)
@@ -232,8 +248,10 @@ namespace CNS_V01
             string query = "SELECT COUNT(*) FROM Productos WHERE [Código Barras] = ?";
             using (OleDbCommand command = new OleDbCommand(query, conexion))
             {
+                conexion.Open();
                 command.Parameters.AddWithValue("CódigoBarras", codigoBarras);
                 int count = Convert.ToInt32(command.ExecuteScalar());
+                conexion.Close();
                 return count > 0;
             }
         }
