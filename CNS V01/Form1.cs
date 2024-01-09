@@ -9,6 +9,10 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Data.SqlClient;
 using System.Data.OleDb;
+using iText.Kernel.Pdf;
+using iText.Layout;
+using iText.Layout.Element;
+using System.IO;
 
 namespace CNS_V01
 {
@@ -17,12 +21,13 @@ namespace CNS_V01
         private OleDbConnection conexion;
         private OleDbDataAdapter adapter;
         private DataTable dataTable;
+        private string connectionString;
         public Form1()
         {
             InitializeComponent();
 
             // Configurar la cadena de conexión de Access
-            string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\\bdd\\DataBase01.accdb;Persist Security Info=False;";
+            connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\\bdd\\DataBase01.accdb;Persist Security Info=False;";
             conexion = new OleDbConnection(connectionString);
 
             // Configurar el adaptador y el DataTable
@@ -269,5 +274,310 @@ namespace CNS_V01
             }
         }
 
+        private void txtCodeProductV_Leave(object sender, EventArgs e)
+        {
+            string codigoProducto = txtCodeProductV.Text.Trim();
+
+            // Verificar si el código del producto no está vacío
+            if (!string.IsNullOrEmpty(codigoProducto))
+            {
+                // Consultar la base de datos para obtener el nombre del producto
+                string query = "SELECT Nombre FROM Productos WHERE [Código Barras] = @Codigo";
+                OleDbCommand comando = new OleDbCommand(query, conexion);
+                comando.Parameters.AddWithValue("@Codigo", codigoProducto);
+
+                try
+                {
+                    conexion.Open();
+                    object resultado = comando.ExecuteScalar();
+
+                    // Verificar si se encontró un nombre para el código proporcionado
+                    if (resultado != null)
+                    {
+                        txtNameProductV.Text = resultado.ToString();
+                    }
+                    else
+                    {
+                        MessageBox.Show("El código no es válido", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        txtCodeProductV.Focus();
+                        txtCodeProductV.SelectAll();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error al acceder a la base de datos: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    conexion.Close();
+                }
+            }
+        }
+
+        private void btnAddVenta_Click(object sender, EventArgs e)
+        {
+            string codigoProducto = txtCodeProductV.Text.Trim();
+            string nombreProducto = txtNameProductV.Text;
+            decimal precioProducto;
+            int cantidadVenta;
+
+            // Verificar si el código del producto no está vacío
+            if (string.IsNullOrEmpty(codigoProducto))
+            {
+                MessageBox.Show("Por favor, ingrese un código de producto válido.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // Verificar si el producto existe en la base de datos
+            string query = "SELECT PVP FROM Productos WHERE [Código Barras] = @Codigo";
+            using (OleDbConnection conexion = new OleDbConnection(connectionString))
+            using (OleDbCommand comando = new OleDbCommand(query, conexion))
+            {
+                comando.Parameters.AddWithValue("@Codigo", codigoProducto);
+
+                try
+                {
+                    conexion.Open();
+                    object resultado = comando.ExecuteScalar();
+
+                    // Verificar si se encontró un precio para el código proporcionado
+                    if (resultado != null)
+                    {
+                        precioProducto = Convert.ToDecimal(resultado);
+                    }
+                    else
+                    {
+                        MessageBox.Show("El producto no se encuentra en la base de datos.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        txtCodeProductV.Clear();
+                        txtNameProductV.Clear();
+                        txtCantidadVenta.Clear();
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error al acceder a la base de datos: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+            }
+
+            // Verificar si la cantidad es un número válido
+            if (!int.TryParse(txtCantidadVenta.Text, out cantidadVenta) || cantidadVenta <= 0)
+            {
+                MessageBox.Show("Por favor, ingrese una cantidad válida.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                txtCantidadVenta.Focus();
+                txtCantidadVenta.SelectAll();
+                return;
+            }
+
+            // Calcular el total
+            decimal totalVenta = precioProducto * cantidadVenta;
+
+            // Agregar la fila al DataGridView
+            dataGridVentas.Rows.Add(codigoProducto, nombreProducto, precioProducto, cantidadVenta, totalVenta);
+
+            // Limpiar los controles
+            txtCodeProductV.Clear();
+            txtNameProductV.Clear();
+            txtCantidadVenta.Clear();
+        }
+
+        private void btnFacturar_Click(object sender, EventArgs e)
+        {
+            tabControl1.SelectedIndex = 2;
+            // Insertar información del cliente en la tabla Clientes
+            InsertarCliente(txtIDCliente.Text, txtNombreCliente.Text, txtTelefono.Text, txtEmail.Text);
+
+            // Obtener la cédula del cliente recién insertado
+            string cedulaCliente = txtIDCliente.Text;
+            CrearFactura(cedulaCliente);
+
+            // Recorrer las filas del DataGridView
+            foreach (DataGridViewRow fila in dataGridVentas.Rows)
+            {
+                if (fila.Cells["Código"].Value != null)
+                {
+                    string codigoProducto = fila.Cells["Código"].Value.ToString();
+                    int cantidad = Convert.ToInt32(fila.Cells["Cantidad"].Value);
+
+                    // Insertar información de la venta en la tabla Ventas
+                    InsertarVenta(cedulaCliente, codigoProducto, cantidad);
+                    RestarStockMaximo(codigoProducto, cantidad);
+                }
+            }
+
+            MessageBox.Show("Venta realizada con éxito");
+        }
+        private void CrearFactura(string cedulaCliente)
+        {
+            try
+            {
+                conexion.Open();
+
+                // Obtener información del cliente
+                string obtenerClienteQuery = "SELECT [Nombre y Apellido], Teléfono, Correo FROM Clientes WHERE Cédula = @CedulaCliente";
+                OleDbCommand obtenerClienteCmd = new OleDbCommand(obtenerClienteQuery, conexion);
+                obtenerClienteCmd.Parameters.AddWithValue("@CedulaCliente", cedulaCliente);
+                OleDbDataReader clienteReader = obtenerClienteCmd.ExecuteReader();
+
+                // Crear factura en el RichTextBox
+                rtbFactura.Clear();
+                rtbFactura.AppendText("Centro Naturista El Silo\n");
+                rtbFactura.AppendText($"Fecha: {DateTime.Now.ToString("dd/MM/yyyy - HH:mm")}\n\n");
+
+                if (clienteReader.Read())
+                {
+                    string nombreCliente = clienteReader["Nombre y Apellido"].ToString();
+                    string telefonoCliente = clienteReader["Teléfono"].ToString();
+                    string correoCliente = clienteReader["Correo"].ToString();
+
+                    rtbFactura.AppendText($"CI Cliente: {cedulaCliente}\n");
+                    rtbFactura.AppendText($"Cliente: {nombreCliente}\n");
+                    rtbFactura.AppendText($"Teléfono: {telefonoCliente}\n");
+                    rtbFactura.AppendText($"Correo: {correoCliente}\n\n");
+                }
+
+                rtbFactura.AppendText("CANT\tDESCRIPCIÓN\t\tV. UNIT\t\tV. TOTAL\n");
+
+                foreach (DataGridViewRow fila in dataGridVentas.Rows)
+                {
+                    if (fila.Cells["Código"].Value != null)
+                    {
+                        string descripcion = fila.Cells["Nombre"].Value.ToString();
+                        int cantidad = Convert.ToInt32(fila.Cells["Cantidad"].Value);
+                        decimal precioUnitario = Convert.ToDecimal(fila.Cells["Precio"].Value);
+                        decimal total = cantidad * precioUnitario;
+
+                        rtbFactura.AppendText($"{cantidad}\t{descripcion}\t\t{precioUnitario:C}\t\t{total:C}\n");
+                    }
+                }
+
+                // ... (puedes continuar con el resto de la factura, como subtotal, Iva, descuento, total)
+
+                rtbFactura.AppendText("\n*** GRACIAS POR SU COMPRA ***");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al crear la factura: " + ex.Message);
+            }
+            finally
+            {
+                conexion.Close();
+            }
+        }
+        private void RestarStockMaximo(string codigoProducto, int cantidad)
+        {
+            try
+            {
+                conexion.Open();
+
+                // Obtener el stock máximo actual del producto
+                string obtenerStockMaximoQuery = "SELECT [Stock Máximo] FROM Productos WHERE [Código Barras] = @CodigoProducto";
+                OleDbCommand obtenerStockMaximoCmd = new OleDbCommand(obtenerStockMaximoQuery, conexion);
+                obtenerStockMaximoCmd.Parameters.AddWithValue("@CodigoProducto", codigoProducto);
+                int stockMaximoActual = Convert.ToInt32(obtenerStockMaximoCmd.ExecuteScalar());
+
+                // Calcular el nuevo stock máximo restando la cantidad vendida
+                int nuevoStockMaximo = stockMaximoActual - cantidad;
+
+                // Actualizar el stock máximo en la tabla Productos
+                string actualizarStockMaximoQuery = "UPDATE Productos SET [Stock Máximo] = @NuevoStockMaximo WHERE [Código Barras] = @CodigoProducto";
+                OleDbCommand actualizarStockMaximoCmd = new OleDbCommand(actualizarStockMaximoQuery, conexion);
+                actualizarStockMaximoCmd.Parameters.AddWithValue("@NuevoStockMaximo", nuevoStockMaximo);
+                actualizarStockMaximoCmd.Parameters.AddWithValue("@CodigoProducto", codigoProducto);
+
+                actualizarStockMaximoCmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al restar el stock máximo: " + ex.Message);
+            }
+            finally
+            {
+                conexion.Close();
+            }
+        }
+        private void InsertarCliente(string cedula, string nombreApellido, string telefono, string correo)
+        {
+            try
+            {
+                conexion.Open();
+
+                string query = "INSERT INTO Clientes (Cédula, [Nombre y Apellido], Teléfono, Correo) VALUES (@Cedula, @NombreApellido, @Telefono, @Correo)";
+                OleDbCommand cmd = new OleDbCommand(query, conexion);
+                cmd.Parameters.AddWithValue("@Cedula", cedula);
+                cmd.Parameters.AddWithValue("@NombreApellido", nombreApellido);
+                cmd.Parameters.AddWithValue("@Telefono", telefono);
+                cmd.Parameters.AddWithValue("@Correo", correo);
+
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al insertar cliente: " + ex.Message);
+            }
+            finally
+            {
+                conexion.Close();
+            }
+        }
+
+        private void InsertarVenta(string cedulaCliente, string codigoProducto, int cantidad)
+        {
+            try
+            {
+                conexion.Open();
+
+                string query = "INSERT INTO Ventas ([Cédula Cliente], [Código Barras Producto], Cantidad, [Fecha y Hora]) VALUES (@CedulaCliente, @CodigoProducto, @Cantidad, @FechaHora)";
+                OleDbCommand cmd = new OleDbCommand(query, conexion);
+                cmd.Parameters.AddWithValue("@CedulaCliente", cedulaCliente);
+                cmd.Parameters.AddWithValue("@CodigoProducto", codigoProducto);
+                cmd.Parameters.AddWithValue("@Cantidad", cantidad);
+                cmd.Parameters.AddWithValue("@FechaHora", DateTime.Now.ToString());
+
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al insertar venta: " + ex.Message);
+            }
+            finally
+            {
+                conexion.Close();
+            }
+        }
+
+        private void btnImprimir_Click(object sender, EventArgs e)
+        {
+            if (rtbFactura.Text.Length == 0)
+            {
+                MessageBox.Show("La factura está vacía. Realice una venta primero.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "Archivo PDF (*.pdf)|*.pdf";
+            saveFileDialog.Title = "Guardar como PDF";
+
+            if (saveFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                string rutaArchivoPDF = saveFileDialog.FileName;
+
+                using (FileStream fs = new FileStream(rutaArchivoPDF, FileMode.Create))
+                {
+                    using (PdfWriter writer = new PdfWriter(fs))
+                    {
+                        using (PdfDocument pdf = new PdfDocument(writer))
+                        {
+                            Document document = new Document(pdf);
+                            document.Add(new Paragraph(rtbFactura.Text));
+
+                            MessageBox.Show("Factura exportada como PDF con éxito");
+                        }
+                    }
+                }
+            }
+
+        }
     }
 }
