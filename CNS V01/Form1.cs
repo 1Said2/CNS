@@ -3,21 +3,20 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Printing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Data.SqlClient;
 using System.Data.OleDb;
-using iText.Kernel.Pdf;
-using iText.Layout;
-using iText.Layout.Element;
 using System.IO;
 
 namespace CNS_V01
 {
     public partial class Form1 : Form
     {
+        private PrintDocument printDocument;
         private OleDbConnection conexion;
         private OleDbDataAdapter adapter;
         private DataTable dataTable;
@@ -36,7 +35,32 @@ namespace CNS_V01
 
             // Configurar el DataGridView
             dataGridView1.AutoGenerateColumns = true;
+            printDocument = new PrintDocument();
+            printDocument.PrintPage += new PrintPageEventHandler(PrintDocument_PrintPage);
 
+        }
+        private void PrintDocument_PrintPage(object sender, PrintPageEventArgs e)
+        {
+            // Obtener el contenido del RichTextBox para imprimirlo
+            string contenido = rtbFactura.Text;
+
+            // Configurar la fuente y los márgenes
+            Font fuente = new Font("Arial", 10);
+            Margins margenes = new Margins(50, 50, 50, 50);
+
+            // Configurar el área de impresión
+            RectangleF areaImpresion = new RectangleF(
+                e.MarginBounds.Left,
+                e.MarginBounds.Top,
+                e.MarginBounds.Width,
+                e.MarginBounds.Height
+            );
+
+            // Imprimir el contenido en el área definida
+            e.Graphics.DrawString(contenido, fuente, Brushes.Black, areaImpresion, new StringFormat());
+
+            // Verificar si hay más páginas para imprimir
+            e.HasMorePages = false;
         }
         private void btnGuardar_Click(object sender, EventArgs e)
         {
@@ -549,35 +573,14 @@ namespace CNS_V01
 
         private void btnImprimir_Click(object sender, EventArgs e)
         {
-            if (rtbFactura.Text.Length == 0)
+            PrintDialog printDialog = new PrintDialog();
+            printDialog.Document = printDocument;
+
+            if (printDialog.ShowDialog() == DialogResult.OK)
             {
-                MessageBox.Show("La factura está vacía. Realice una venta primero.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
+                // Imprimir el documento
+                printDocument.Print();
             }
-
-            SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Filter = "Archivo PDF (*.pdf)|*.pdf";
-            saveFileDialog.Title = "Guardar como PDF";
-
-            if (saveFileDialog.ShowDialog() == DialogResult.OK)
-            {
-                string rutaArchivoPDF = saveFileDialog.FileName;
-
-                using (FileStream fs = new FileStream(rutaArchivoPDF, FileMode.Create))
-                {
-                    using (PdfWriter writer = new PdfWriter(fs))
-                    {
-                        using (PdfDocument pdf = new PdfDocument(writer))
-                        {
-                            Document document = new Document(pdf);
-                            document.Add(new Paragraph(rtbFactura.Text));
-
-                            MessageBox.Show("Factura exportada como PDF con éxito");
-                        }
-                    }
-                }
-            }
-
         }
     }
 }
