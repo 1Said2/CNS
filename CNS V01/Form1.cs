@@ -76,11 +76,7 @@ namespace CNS_V01
         }
         private void btnGuardar_Click(object sender, EventArgs e)
         {
-            if (!EsCodigoBarrasEAN13(txtCodigoBarras.Text))
-            {
-                MessageBox.Show("El código de barras ingresado no es válido.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return; // Salir del método si el código de barras no es válido
-            }
+            string codigo = txtCodigoBarras.Text;
             if (string.IsNullOrWhiteSpace(txtCodigoBarras.Text) ||
         string.IsNullOrWhiteSpace(txtNombreProducto.Text) ||
         string.IsNullOrWhiteSpace(txtPrecioCompra.Text) ||
@@ -117,6 +113,11 @@ namespace CNS_V01
             {
                 MessageBox.Show("Los precios y stocks no pueden ser negativos o 0.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return; // Salir del método si hay valores negativos
+            }
+            if (!EsCodigoBarrasEAN13(codigo))
+            {
+                MessageBox.Show("El código de barras ingresado no es válido.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return; // Salir del método si el código de barras no es válido
             }
             try
             {
@@ -347,6 +348,7 @@ namespace CNS_V01
                         MessageBox.Show("El código no es válido", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         txtCodeProductV.Focus();
                         txtCodeProductV.SelectAll();
+                        txtNameProductV.Clear();
                     }
                 }
                 catch (Exception ex)
@@ -415,6 +417,43 @@ namespace CNS_V01
                 txtCantidadVenta.SelectAll();
                 return;
             }
+            string stockQuery = "SELECT [Stock Máximo], [Stock Mínimo] FROM Productos WHERE [Código Barras] = @Codigo";
+            using (OleDbConnection conexionStock = new OleDbConnection(connectionString))
+            using (OleDbCommand comandoStock = new OleDbCommand(stockQuery, conexionStock))
+            {
+                comandoStock.Parameters.AddWithValue("@Codigo", codigoProducto);
+
+                try
+                {
+                    conexionStock.Open();
+                    using (OleDbDataReader reader = comandoStock.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            int stockMaximo = reader.GetInt32(0);
+                            int stockMinimo = reader.GetInt32(1);
+
+                            if (stockMaximo - cantidadVenta < 0)
+                            {
+                                MessageBox.Show("La cantidad ingresada excede el stock mínimo.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                txtCantidadVenta.Focus();
+                                txtCantidadVenta.SelectAll();
+                                return;
+                            }
+                            else if (stockMaximo - cantidadVenta <= stockMinimo)
+                            {
+                                MessageBox.Show("Por favor, actualice el stock del producto.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                // Puedes añadir aquí el código adicional si lo necesitas
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error al acceder al stock máximo: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+            }
 
             // Calcular el total
             decimal totalVenta = precioProducto * cantidadVenta;
@@ -427,16 +466,100 @@ namespace CNS_V01
             txtNameProductV.Clear();
             txtCantidadVenta.Clear();
         }
+        private bool VerificarClienteExistente(string cedula)
+        {
+            bool clienteExistente = false;
+
+            try
+            {
+                conexion.Open();
+
+                string query = "SELECT COUNT(*) FROM Clientes WHERE Cédula = @Cedula";
+                OleDbCommand cmd = new OleDbCommand(query, conexion);
+                cmd.Parameters.AddWithValue("@Cedula", cedula);
+
+                int count = Convert.ToInt32(cmd.ExecuteScalar());
+
+                // Si el cliente ya existe, establecer la bandera a true
+                clienteExistente = count > 0;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al verificar cliente existente: " + ex.Message);
+            }
+            finally
+            {
+                conexion.Close();
+            }
+
+            return clienteExistente;
+        }
+        private bool ValidarCorreoElectronico(string correo)
+        {
+            // Expresión regular para validar dirección de correo electrónico
+            string patronCorreo = @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$";
+
+            return System.Text.RegularExpressions.Regex.IsMatch(correo, patronCorreo);
+        }
+        private bool ValidarCedula(string cedula)
+        {
+            // Expresión regular para validar cédula ecuatoriana
+            string patronCedula = @"^[0-9]{10}$";
+
+            return System.Text.RegularExpressions.Regex.IsMatch(cedula, patronCedula);
+        }
+
+        private bool ValidarNumeroTelefono(string telefono)
+        {
+            // Expresión regular para validar número de teléfono con código de país opcional
+            string patronTelefono = @"^\+?[0-9]{1,4}?[0-9]{6,}$";
+
+            return System.Text.RegularExpressions.Regex.IsMatch(telefono, patronTelefono);
+        }
+
+
 
         private void btnFacturar_Click(object sender, EventArgs e)
         {
-            tabControl1.SelectedIndex = 2;
-            // Insertar información del cliente en la tabla Clientes
-            InsertarCliente(txtIDCliente.Text, txtNombreCliente.Text, txtTelefono.Text, txtEmail.Text);
-
-            // Obtener la cédula del cliente recién insertado
             string cedulaCliente = txtIDCliente.Text;
-            CrearFactura(cedulaCliente);
+            string telefonoCliente = txtTelefono.Text;
+            string correoCliente = txtEmail.Text;
+            if (dataGridVentas.Rows.Count == 1)
+            {
+                MessageBox.Show("Debe hacer una compra antes");
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(txtIDCliente.Text) || string.IsNullOrWhiteSpace(txtNombreCliente.Text) || string.IsNullOrWhiteSpace(txtTelefono.Text) || string.IsNullOrWhiteSpace(txtEmail.Text))
+            {
+                MessageBox.Show("Por favor, complete todos campos", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            // Validar cédula, número de teléfono y correo electrónico
+            if (!ValidarCedula(cedulaCliente))
+            {
+                MessageBox.Show("Formato de cédula no válido");
+                return;
+            }
+
+            if (!ValidarNumeroTelefono(telefonoCliente))
+            {
+                MessageBox.Show("Formato de número de teléfono no válido");
+                return;
+            }
+
+            if (!ValidarCorreoElectronico(correoCliente))
+            {
+                MessageBox.Show("Formato de correo electrónico no válido");
+                return;
+            }
+            // Verificar si el cliente ya existe en la base de datos
+            bool clienteExistente = VerificarClienteExistente(cedulaCliente);
+
+            if (!clienteExistente)
+            {
+                // Si el cliente no existe, insertar el nuevo cliente
+                InsertarCliente(cedulaCliente, txtNombreCliente.Text, txtTelefono.Text, txtEmail.Text);
+            }
 
             // Recorrer las filas del DataGridView
             foreach (DataGridViewRow fila in dataGridVentas.Rows)
@@ -453,7 +576,25 @@ namespace CNS_V01
             }
 
             MessageBox.Show("Venta realizada con éxito");
+            CrearFactura(cedulaCliente);
+            tabControl1.SelectedIndex = 2;
         }
+        private decimal CalcularSubtotal()
+        {
+            decimal subtotal = 0;
+
+            foreach (DataGridViewRow fila in dataGridVentas.Rows)
+            {
+                if (fila.Cells["Código"].Value != null)
+                {
+                    decimal total = Convert.ToDecimal(fila.Cells["Total"].Value);
+                    subtotal += total;
+                }
+            }
+
+            return subtotal;
+        }
+
         private void CrearFactura(string cedulaCliente)
         {
             try
@@ -483,7 +624,7 @@ namespace CNS_V01
                     rtbFactura.AppendText($"Correo: {correoCliente}\n\n");
                 }
 
-                rtbFactura.AppendText("CANT\tDESCRIPCIÓN\t\tV. UNIT\t\tV. TOTAL\n");
+                rtbFactura.AppendText("CANT\t\tNombre\t\t\t\t\tV. UNIT\t\t\t\tV. TOTAL\n");
 
                 foreach (DataGridViewRow fila in dataGridVentas.Rows)
                 {
@@ -494,13 +635,21 @@ namespace CNS_V01
                         decimal precioUnitario = Convert.ToDecimal(fila.Cells["Precio"].Value);
                         decimal total = cantidad * precioUnitario;
 
-                        rtbFactura.AppendText($"{cantidad}\t{descripcion}\t\t{precioUnitario:C}\t\t{total:C}\n");
+                        rtbFactura.AppendText($"{cantidad}\t\t{descripcion}\t\t\t{precioUnitario:C}\t\t\t\t{total:C}\n");
                     }
                 }
 
-                // ... (puedes continuar con el resto de la factura, como subtotal, Iva, descuento, total)
+                decimal subtotal = CalcularSubtotal();
+                decimal iva = subtotal * 0.12m;
+                decimal total1 = subtotal + iva;
+                rtbFactura.AppendText($"\n");
+                rtbFactura.AppendText($"\nSubtotal\t\t\t\t\t{subtotal:C}\n");
+                rtbFactura.AppendText($"Iva 12%\t\t\t\t\t{iva:C}\n");
+                rtbFactura.AppendText($"Total\t\t\t\t\t{total1:C}\n");
 
                 rtbFactura.AppendText("\n*** GRACIAS POR SU COMPRA ***");
+                dataGridVentas.Rows.Clear();
+
             }
             catch (Exception ex)
             {
@@ -602,6 +751,37 @@ namespace CNS_V01
             {
                 // Imprimir el documento
                 printDocument.Print();
+            }
+        }
+
+        private void txtIDCliente_Leave(object sender, EventArgs e)
+        {
+            string cedula = txtIDCliente.Text;
+            try
+            {
+                conexion.Open();
+
+                string query = "SELECT [Nombre y Apellido], Teléfono, Correo FROM Clientes WHERE Cédula = @Cedula";
+                OleDbCommand cmd = new OleDbCommand(query, conexion);
+                cmd.Parameters.AddWithValue("@Cedula", cedula);
+
+                OleDbDataReader reader = cmd.ExecuteReader();
+
+                if (reader.Read())
+                {
+                    // Llenar los TextBox con la información del cliente existente
+                    txtNombreCliente.Text = reader["Nombre y Apellido"].ToString();
+                    txtTelefono.Text = reader["Teléfono"].ToString();
+                    txtEmail.Text = reader["Correo"].ToString();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al recuperar información del cliente: " + ex.Message);
+            }
+            finally
+            {
+                conexion.Close();
             }
         }
     }
