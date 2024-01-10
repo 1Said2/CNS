@@ -393,7 +393,7 @@
             this.stockMáximoDataGridViewTextBoxColumn,
             this.stockMínimoDataGridViewTextBoxColumn});
             this.dataGridView1.DataSource = this.productosBindingSource;
-            this.dataGridView1.Location = new System.Drawing.Point(20, 311);
+            this.dataGridView1.Location = new System.Drawing.Point(0, 309);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.RowHeadersWidth = 62;
             this.dataGridView1.RowTemplate.Height = 28;

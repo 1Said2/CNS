@@ -62,8 +62,25 @@ namespace CNS_V01
             // Verificar si hay más páginas para imprimir
             e.HasMorePages = false;
         }
+        private bool EsCodigoBarrasEAN13(string codigo)
+        {
+            // Utilizar una expresión regular para verificar que sea un número de 13 dígitos
+            if (System.Text.RegularExpressions.Regex.IsMatch(codigo, @"^\d{13}$"))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
         private void btnGuardar_Click(object sender, EventArgs e)
         {
+            if (!EsCodigoBarrasEAN13(txtCodigoBarras.Text))
+            {
+                MessageBox.Show("El código de barras ingresado no es válido.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return; // Salir del método si el código de barras no es válido
+            }
             if (string.IsNullOrWhiteSpace(txtCodigoBarras.Text) ||
         string.IsNullOrWhiteSpace(txtNombreProducto.Text) ||
         string.IsNullOrWhiteSpace(txtPrecioCompra.Text) ||
@@ -91,6 +108,11 @@ namespace CNS_V01
             pvp=double.Parse(txtPVP.Text);
             stockMinimo = int.Parse(txtStockMinimo.Text);
             stockMaximo = int.Parse(txtStockMaximo.Text);
+            if (stockMinimo >= stockMaximo)
+            {
+                MessageBox.Show("El stock mínimo debe ser inferior al stock máximo.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return; // Salir del método si la validación no se cumple
+            }
             if (precioCompra <= 0 || pvp <= 0 || stockMaximo <= 0 || stockMinimo <= 0)
             {
                 MessageBox.Show("Los precios y stocks no pueden ser negativos o 0.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
