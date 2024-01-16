@@ -11,6 +11,8 @@ using System.Windows.Forms;
 using System.Data.SqlClient;
 using System.Data.OleDb;
 using System.IO;
+using PdfSharp.Drawing;
+using PdfSharp.Pdf;
 
 namespace CNS_V01
 {
@@ -35,8 +37,6 @@ namespace CNS_V01
 
             // Configurar el DataGridView
             dataGridView1.AutoGenerateColumns = true;
-            printDocument = new PrintDocument();
-            printDocument.PrintPage += new PrintPageEventHandler(PrintDocument_PrintPage);
 
         }
         private void PrintDocument_PrintPage(object sender, PrintPageEventArgs e)
@@ -578,6 +578,9 @@ namespace CNS_V01
             MessageBox.Show("Venta realizada con éxito");
             CrearFactura(cedulaCliente);
             tabControl1.SelectedIndex = 2;
+            dataTable.Clear();
+            adapter.Fill(dataTable);
+            dataGridView1.DataSource = dataTable;
         }
         private decimal CalcularSubtotal()
         {
@@ -744,14 +747,39 @@ namespace CNS_V01
 
         private void btnImprimir_Click(object sender, EventArgs e)
         {
-            PrintDialog printDialog = new PrintDialog();
-            printDialog.Document = printDocument;
+            // Crear un documento PDF
+            PdfDocument document = new PdfDocument();
+            PdfPage page = document.AddPage();
+            XGraphics gfx = XGraphics.FromPdfPage(page);
 
-            if (printDialog.ShowDialog() == DialogResult.OK)
+            // Configurar la fuente y la posición inicial
+            XFont font = new XFont("Arial", 12);
+            XPoint point = new XPoint(10, 10);
+
+            // Obtener el contenido del RichTextBox
+            string contenido = rtbFactura.Text;
+
+            // Dividir el contenido en líneas
+            string[] lineas = contenido.Split('\n');
+
+            // Escribir cada línea en el documento PDF
+            foreach (string linea in lineas)
             {
-                // Imprimir el documento
-                printDocument.Print();
+                gfx.DrawString(linea, font, XBrushes.Black, point);
+                point.Y += 12; // Ajustar la posición vertical para la siguiente línea
             }
+
+            // Especificar la ruta del archivo PDF
+            string nombreArchivo = $"Factura_{DateTime.Now.ToString("yyyyMMddHHmmss")}.pdf";
+            string rutaUsuario = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            string rutaPDF = Path.Combine(rutaUsuario, nombreArchivo);
+
+
+            // Guardar el documento PDF en el archivo
+            document.Save(rutaPDF);
+
+            // Abrir el archivo PDF con el visor de PDF predeterminado
+            System.Diagnostics.Process.Start(rutaPDF);
         }
 
         private void txtIDCliente_Leave(object sender, EventArgs e)
