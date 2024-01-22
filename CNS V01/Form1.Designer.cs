@@ -131,7 +131,7 @@
             this.rtbFactura.Name = "rtbFactura";
             this.rtbFactura.Size = new System.Drawing.Size(716, 447);
             this.rtbFactura.TabIndex = 0;
-            this.rtbFactura.Text = "Hola";
+            this.rtbFactura.Text = "";
             // 
             // tabPage2
             // 

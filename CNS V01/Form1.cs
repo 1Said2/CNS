@@ -13,6 +13,7 @@ using System.Data.OleDb;
 using System.IO;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf;
+using static System.Net.WebRequestMethods;
 
 namespace CNS_V01
 {
@@ -568,9 +569,10 @@ namespace CNS_V01
                 {
                     string codigoProducto = fila.Cells["Código"].Value.ToString();
                     int cantidad = Convert.ToInt32(fila.Cells["Cantidad"].Value);
+                    double precio = Convert.ToDouble(fila.Cells["Precio"].Value);
 
                     // Insertar información de la venta en la tabla Ventas
-                    InsertarVenta(cedulaCliente, codigoProducto, cantidad);
+                    InsertarVenta(cedulaCliente, codigoProducto, cantidad,precio);
                     RestarStockMaximo(codigoProducto, cantidad);
                 }
             }
@@ -638,7 +640,7 @@ namespace CNS_V01
                         decimal precioUnitario = Convert.ToDecimal(fila.Cells["Precio"].Value);
                         decimal total = cantidad * precioUnitario;
 
-                        rtbFactura.AppendText($"{cantidad}\t\t{descripcion}\t\t\t{precioUnitario:C}\t\t\t\t{total:C}\n");
+                        rtbFactura.AppendText($"{cantidad}\t\t{descripcion}\t\t\t${precioUnitario}\t\t\t\t${total}\n");
                     }
                 }
 
@@ -646,9 +648,9 @@ namespace CNS_V01
                 decimal iva = subtotal * 0.12m;
                 decimal total1 = subtotal + iva;
                 rtbFactura.AppendText($"\n");
-                rtbFactura.AppendText($"\nSubtotal\t\t\t\t\t{subtotal:C}\n");
-                rtbFactura.AppendText($"Iva 12%\t\t\t\t\t{iva:C}\n");
-                rtbFactura.AppendText($"Total\t\t\t\t\t{total1:C}\n");
+                rtbFactura.AppendText($"\nSubtotal\t\t\t\t\t${subtotal}\n");
+                rtbFactura.AppendText($"Iva 12%\t\t\t\t\t${iva}\n");
+                rtbFactura.AppendText($"Total\t\t\t\t\t${total1}\n");
 
                 rtbFactura.AppendText("\n*** GRACIAS POR SU COMPRA ***");
                 dataGridVentas.Rows.Clear();
@@ -720,19 +722,20 @@ namespace CNS_V01
             }
         }
 
-        private void InsertarVenta(string cedulaCliente, string codigoProducto, int cantidad)
+        private void InsertarVenta(string cedulaCliente, string codigoProducto, int cantidad,double precio)
         {
             try
             {
                 conexion.Open();
 
-                string query = "INSERT INTO Ventas ([Cédula Cliente], [Código Barras Producto], Cantidad, [Fecha y Hora]) VALUES (@CedulaCliente, @CodigoProducto, @Cantidad, @FechaHora)";
+                string query = "INSERT INTO Ventas ([Cédula Cliente], [Código Barras Producto], Cantidad, [Fecha y Hora], Total) VALUES (@CedulaCliente, @CodigoProducto, @Cantidad, @FechaHora, @Total)";
+
                 OleDbCommand cmd = new OleDbCommand(query, conexion);
                 cmd.Parameters.AddWithValue("@CedulaCliente", cedulaCliente);
                 cmd.Parameters.AddWithValue("@CodigoProducto", codigoProducto);
                 cmd.Parameters.AddWithValue("@Cantidad", cantidad);
                 cmd.Parameters.AddWithValue("@FechaHora", DateTime.Now.ToString());
-
+                cmd.Parameters.AddWithValue("@Total",precio*cantidad);
                 cmd.ExecuteNonQuery();
             }
             catch (Exception ex)
@@ -747,10 +750,14 @@ namespace CNS_V01
 
         private void btnImprimir_Click(object sender, EventArgs e)
         {
+
             // Crear un documento PDF
             PdfDocument document = new PdfDocument();
             PdfPage page = document.AddPage();
             XGraphics gfx = XGraphics.FromPdfPage(page);
+            string rutaLogo = "C:/bdd/logo.jpg";  // Reemplaza con la ruta real de tu archivo de imagen
+            XImage logo = XImage.FromFile(rutaLogo);
+            gfx.DrawImage(logo, 200, 0, logo.PixelWidth / 2, logo.PixelHeight / 2);
 
             // Configurar la fuente y la posición inicial
             XFont font = new XFont("Arial", 12);
@@ -762,10 +769,14 @@ namespace CNS_V01
             // Dividir el contenido en líneas
             string[] lineas = contenido.Split('\n');
 
+
             // Escribir cada línea en el documento PDF
             foreach (string linea in lineas)
             {
-                gfx.DrawString(linea, font, XBrushes.Black, point);
+                // Reemplazar los caracteres de tabulación por espacios en blanco
+                string lineaSinTabulaciones = linea.Replace("\t", "    "); // Puedes ajustar el número de espacios según tus preferencias
+
+                gfx.DrawString(lineaSinTabulaciones, font, XBrushes.Black, point);
                 point.Y += 12; // Ajustar la posición vertical para la siguiente línea
             }
 
